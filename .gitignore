@@ -5,8 +5,6 @@
 *.Rproj
 .Rproj.user/
 
-# pkgdown site
-
 # OS files
 .DS_Store
 
