@@ -1,0 +1,16 @@
+# _pkgdown.yml
+template:
+  bootstrap: 5
+  bootswatch: flatly
+
+url: https://jamesdurant.github.io/loadedDipole
+
+navbar:
+  title: "loadedDipole"
+  left:
+    - text: "Reference"
+      href: reference/index.html
+    - text: "Articles"
+      href: articles/index.html
+    - text: "GitHub"
+      href: https://github.com/JamesDurant/loadedDipole

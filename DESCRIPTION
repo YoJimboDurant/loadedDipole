@@ -1,0 +1,17 @@
+Package: loadedDipole
+Title: Tools for Shortened Dipole and Loading Coil Design
+Version: 0.1.0
+Authors@R: 
+    person("James", "Durant", email = "your_email@domain.com", 
+           role = c("aut", "cre"))
+Description: Computational tools for loading coil optimization and 
+    shortened dipole modeling. Portions of the code were developed 
+    with assistance from ChatGPT ("Mike").
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports: stats
+Suggests: ggplot2, knitr, rmarkdown
+Roxygen: list(markup = "roxygen", roclets = c("namespace", "rd"))
+VignetteBuilder: knitr
+RoxygenNote: 7.3.3

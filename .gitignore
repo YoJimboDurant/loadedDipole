@@ -1,0 +1,17 @@
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user
+*.Rproj
+.Rproj.user/
+
+# pkgdown site
+docs/
+
+# OS files
+.DS_Store
+
+# Compiled objects
+*.o
+*.so
+*.dll
