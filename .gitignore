@@ -6,7 +6,6 @@
 .Rproj.user/
 
 # pkgdown site
-docs/
 
 # OS files
 .DS_Store
