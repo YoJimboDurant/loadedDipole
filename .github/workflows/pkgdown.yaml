@@ -44,6 +44,3 @@ jobs:
     - name: Deploy to GitHub Pages
         id: deploy_pages
         uses: actions/deploy-pages@v2
-      - name: Deploy to GitHub Pages
-        id: deploy_pages
-        uses: actions/deploy-pages@v2
