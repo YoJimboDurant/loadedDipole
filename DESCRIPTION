@@ -15,3 +15,6 @@ Suggests: ggplot2, knitr, rmarkdown
 Roxygen: list(markup = "roxygen", roclets = c("namespace", "rd"))
 VignetteBuilder: knitr
 RoxygenNote: 7.3.3
+URL: https://yojimbodurant.github.io/loadedDipole
+BugReports: https://github.com/YoJimboDurant/loadedDipole/issues
+
