@@ -3,7 +3,7 @@ template:
   bootstrap: 5
   bootswatch: flatly
 
-url: https://jamesdurant.github.io/loadedDipole
+url: https://yojimbodurant.github.io/loadedDipole
 
 navbar:
   title: "loadedDipole"
