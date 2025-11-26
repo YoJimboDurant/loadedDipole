@@ -52,7 +52,7 @@ library(loadedDipole)
 
 ```r
 result <- optimize_inductance_for_position(
-  freq = 14.07e6,
+  freq = 14.076,
   total_length = 6.5,
   wire_radius = 0.001,
   coil_position_frac = 0.4
