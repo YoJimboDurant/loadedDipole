@@ -3,7 +3,7 @@ pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   loadedDipole-60ft-80m: loadedDipole-60ft-80m.html
-last_built: 2025-11-26T18:36Z
+last_built: 2025-11-26T18:43Z
 urls:
   reference: https://yojimbodurant.github.io/loadedDipole/reference
   article: https://yojimbodurant.github.io/loadedDipole/articles
