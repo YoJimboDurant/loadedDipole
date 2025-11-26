@@ -35,7 +35,7 @@ This package emerged from practical antenna design problems and includes computa
 
 ```r
 # install.packages("remotes")
-remotes::install_github("JamesDurant/loadedDipole")
+remotes::install_github("YoJimboDurant/loadedDipole")
 ```
 
 ### Load the package:
