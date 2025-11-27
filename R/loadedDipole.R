@@ -1279,4 +1279,670 @@ plot_coil_turns <- function(
     )
 }
 
+#' Full practical design workflow for an optimized loaded dipole
+#'
+#' This function builds on `design_loaded_dipole()` by:
+#'   1. Finding the optimal coil position using efficiency + inductance tradeoff
+#'   2. Designing the physical loading coil on PVC
+#'   3. Estimating efficiency
+#'   4. Producing a builder-friendly summary table
+#'   5. Drawing a simple schematic
+#'
+#' @param frequency Operating frequency in MHz.
+#' @param total_length Total physical dipole length (ft or m).
+#' @param L_max Maximum acceptable inductance (uH) per coil.
+#' @param pvc_size PVC form (e.g., "1-1/2").
+#' @param wire_diameter Wire diameter (inches or m).
+#' @param turn_spacing Turn spacing in inches (NULL = tight winding).
+#' @param positions Coil positions to evaluate (default: 8–22 ft or metric-converted).
+#' @param metric TRUE = metres, FALSE = feet.
+#' @param make_plot Draw schematic?
+#'
+#' @return A list containing:
+#'   \item{optimizer}{Output of design_loaded_dipole()}
+#'   \item{best}{Chosen design row}
+#'   \item{coil}{PVC coil geometry from design_pvc_coil()}
+#'   \item{efficiency}{Efficiency estimates from estimate_efficiency()}
+#'   \item{build_table}{Printable build-sheet table}
+#' @export
+design_loaded_dipole_full <- function(
+    frequency,
+    total_length,
+    L_max,
+    pvc_size = "1-1/2",
+    wire_diameter = 0.065,
+    turn_spacing = NULL,
+    positions = seq(8, 22, by = 0.5),
+    metric = FALSE,
+    make_plot = TRUE
+) {
+  # -----------------------------------------------------
+  # 1. Electrical Optimization (your real engine)
+  # -----------------------------------------------------
+  opt <- design_loaded_dipole(
+    frequency     = frequency,
+    total_length  = total_length,
+    L_max         = L_max,
+    wire_diameter = wire_diameter,
+    positions     = positions,
+    metric        = metric
+  )
+  
+  best <- opt$best
+  B    <- best$coil_position
+  L_uH <- best$inductance
+  
+  # -----------------------------------------------------
+  # 2. Coil Physical Design
+  # -----------------------------------------------------
+  coil <- design_pvc_coil(
+    inductance     = L_uH,
+    pvc_size       = pvc_size,
+    wire_diameter  = wire_diameter,
+    turn_spacing   = turn_spacing
+  )
+  
+  # -----------------------------------------------------
+  # 3. Efficiency estimation (using segmented model)
+  # -----------------------------------------------------
+  eff <- estimate_efficiency(
+    frequency       = frequency,
+    total_length    = total_length,
+    coil_inductance = L_uH,
+    coil_position   = B,
+    wire_diameter   = wire_diameter,
+    metric          = metric,
+    model           = "both"
+  )
+  
+  # -----------------------------------------------------
+  # 4. Build-sheet table
+  # -----------------------------------------------------
+  units <- if (metric) "m" else "ft"
+  
+  build_table <- data.frame(
+    Item = c(
+      "Operating frequency",
+      "Total dipole length",
+      "Optimal coil position",
+      "Required inductance (uH)",
+      "PVC coil form",
+      "Coil diameter (in)",
+      "Turns",
+      "Winding length (in)",
+      "Wire length (ft)",
+      "Efficiency (simple)",
+      "Efficiency (segmented)",
+      "Overall efficiency"
+    ),
+    Value = c(
+      sprintf("%.3f MHz", frequency),
+      sprintf("%.2f %s", total_length, units),
+      sprintf("%.2f %s", B, units),
+      sprintf("%.2f uH", L_uH),
+      pvc_size,
+      sprintf("%.3f", coil$diameter_in),
+      sprintf("%.1f turns", coil$turns),
+      sprintf("%.2f in", coil$winding_length_in),
+      sprintf("%.2f ft", coil$wire_length_ft),
+      sprintf("%.3f", eff$efficiency_simple),
+      sprintf("%.3f", eff$efficiency_segmented),
+      sprintf("%.3f", eff$efficiency)
+    )
+  )
+  
+  # -----------------------------------------------------
+  # 5. Schematic (simple, printable)
+  # -----------------------------------------------------
+  if (make_plot) {
+    plot(0,0,type="n",xlim=c(0,1),ylim=c(0,1),axes=FALSE,xlab="",ylab="",
+         main="Optimized Loaded Dipole Schematic (Not to Scale)")
+    
+    feed_x <- 0.1
+    feed_y <- 0.5
+    
+    # Draw dipole wire
+    segments(feed_x, feed_y, 0.9, feed_y)
+    
+    # Coil marker
+    frac <- B / total_length
+    coil_x <- feed_x + frac * (0.9 - feed_x)
+    segments(coil_x - 0.02, feed_y - 0.05,
+             coil_x + 0.02, feed_y + 0.05, lwd = 2)
+    
+    text(feed_x, feed_y - 0.1, "Feedpoint (coax + choke)", cex = 0.8)
+    text(coil_x, feed_y + 0.12,
+         sprintf("Loading coil\n%.1f uH at %.2f %s",
+                 L_uH, B, units),
+         cex = 0.7)
+  }
+  
+  # -----------------------------------------------------
+  # Return all objects
+  # -----------------------------------------------------
+  list(
+    optimizer   = opt,
+    best        = best,
+    coil        = coil,
+    efficiency  = eff,
+    build_table = build_table,
+    metric = metric,
+    total_length = total_length,
+    frequency = frequency
+  )
+}
 
+
+#' Internal plotting helper for loaded dipole schematics
+#'
+#' Not exported. Used only by design_loaded_dipole_full() and
+#' render_loaded_dipole_md().
+#'
+#' @param design A design object returned by design_loaded_dipole_full()
+#' @keywords internal
+#' 
+design_loaded_dipole_full_plot <- function(design) {
+  
+  bt <- design$build_table
+  
+  get_num <- function(label) {
+    v <- bt$Value[bt$Item == label]
+    if (!length(v)) return(NA_real_)
+    as.numeric(sub("[^0-9.].*$", "", v))
+  }
+  
+  total_len  <- get_num("Total dipole length")
+  coil_pos   <- get_num("Optimal coil position")
+  inductance <- get_num("Required inductance (uH)")
+  freq_mhz   <- get_num("Operating frequency")
+  
+  half_len <- total_len / 2
+  units <- if (isTRUE(design$metric)) "m" else "ft"
+  
+  # Expanded vertical space
+  plot(
+    NA, NA,
+    xlim = c(-half_len - 5, half_len + 5),
+    ylim = c(-6, 7),
+    xlab = "", ylab = "",
+    axes = FALSE,
+    asp = 1,
+    main = sprintf("Loaded Dipole Schematic (%.3f MHz)", freq_mhz),
+    cex.main = 2.5
+  )
+  
+  # Main wire
+  segments(-half_len, 0, half_len, 0, lwd = 8)
+  
+  # Feedpoint
+  points(0, 0, pch = 19, col = "blue", cex = 2.5)
+  text(0, 1.2, "Feedpoint", col = "blue", cex = 2)
+  
+  # Coil positions
+  coil_x <- c(-coil_pos, coil_pos)
+  points(coil_x, c(0,0), pch = 21, bg = "white", col = "red", cex = 3)
+  
+  text(
+    coil_x,
+    rep(-2.0, 2),
+    sprintf("Coil @ %.1f %s", coil_pos, units),
+    col = "red",
+    cex = 2
+  )
+  
+  # Move inductance DOWN
+  text(
+    0, -5.0,
+    sprintf("Per-coil inductance: %.2f µH", inductance),
+    col = "red",
+    cex = 2.3,
+    font = 2
+  )
+  
+  # End labels (unchanged)
+  text(-half_len, 4.0, sprintf("End (%.1f %s)", -half_len, units), cex = 2)
+  text( half_len, 4.0, sprintf("End (%.1f %s)",  half_len, units), cex = 2)
+  
+  # Distance arrows
+  arrow_y <- 5.0
+  
+  arrows(0, arrow_y, coil_pos, arrow_y, length = 0.12, lwd = 2)
+  arrows(0, arrow_y, -coil_pos, arrow_y, length = 0.12, lwd = 2)
+  
+  # Move coil distance text UP
+  text(
+    0, arrow_y + 1.5,   # was +0.5, now +1.5
+    sprintf("Coils %.1f %s from center", coil_pos, units),
+    cex = 2
+  )
+}
+
+#' Internal plotting helper for loaded dipole schematics
+#'
+#' Draws a simple (not-to-scale) schematic of a loaded dipole based on the
+#' \code{build_table} produced by \code{design_loaded_dipole_full()}.
+#'
+#' @param design A design object returned by \code{design_loaded_dipole_full()}.
+#'
+#' @return Called for its side effect of drawing a base R plot.
+#' @export
+design_loaded_dipole_full_plot <- function(design) {
+  
+  bt <- design$build_table
+  
+  get_num <- function(label) {
+    v <- bt$Value[bt$Item == label]
+    if (!length(v)) return(NA_real_)
+    as.numeric(gsub("[^0-9.-]", "", v))
+  }
+  
+  total_len  <- get_num("Total dipole length")
+  coil_pos   <- get_num("Optimal coil position")
+  inductance <- get_num("Required inductance (uH)")
+  freq_mhz   <- get_num("Operating frequency")
+  
+  half_len <- total_len / 2
+  units <- if (isTRUE(design$metric)) "m" else "ft"
+  
+  # Expanded vertical space
+  plot(
+    NA, NA,
+    xlim = c(-half_len - 5, half_len + 5),
+    ylim = c(-6, 7),
+    xlab = "", ylab = "",
+    axes = FALSE,
+    asp = 1,
+    main = sprintf("Loaded Dipole Schematic (%.3f MHz)", freq_mhz),
+    cex.main = 2.5
+  )
+  
+  # Main wire
+  segments(-half_len, 0, half_len, 0, lwd = 8)
+  
+  # Feedpoint
+  points(0, 0, pch = 19, col = "blue", cex = 2.5)
+  text(0, 1.2, "Feedpoint", col = "blue", cex = 2)
+  
+  # Coil positions
+  coil_x <- c(-coil_pos, coil_pos)
+  points(coil_x, c(0, 0), pch = 21, bg = "white", col = "red", cex = 3)
+  
+  text(
+    coil_x,
+    rep(-2.0, 2),
+    sprintf("Coil @ %.1f %s", coil_pos, units),
+    col = "red",
+    cex = 2
+  )
+  
+  # Inductance label (down)
+  text(
+    0, -5.0,
+    sprintf("Per-coil inductance: %.2f uH", inductance),
+    col = "red",
+    cex = 2.3,
+    font = 2
+  )
+  
+  # End labels
+  text(-half_len, 4.0, sprintf("End (%.1f %s)", -half_len, units), cex = 2)
+  text( half_len, 4.0, sprintf("End (%.1f %s)",  half_len, units), cex = 2)
+  
+  # Distance arrows
+  arrow_y <- 5.0
+  
+  arrows(0, arrow_y, coil_pos,  arrow_y, length = 0.12, lwd = 2)
+  arrows(0, arrow_y, -coil_pos, arrow_y, length = 0.12, lwd = 2)
+  
+  # Coil distance text (up)
+  text(
+    0, arrow_y + 1.5,
+    sprintf("Coils %.1f %s from center", coil_pos, units),
+    cex = 2
+  )
+}
+
+# ======================================================================
+# Reporting and HTML/Markdown rendering helpers
+# ======================================================================
+
+#' Encode a PNG file as Base64 for HTML embedding
+#'
+#' @param file Path to a PNG file.
+#' @return A single Base64 string (no data:image/... prefix).
+#' @keywords internal
+encode_png_base64 <- function(file) {
+  bytes <- readBin(file, what = "raw", n = file.info(file)$size)
+  base64enc::base64encode(bytes)
+}
+
+#' Generate a Base64-encoded QR Code PNG
+#'
+#' Internal helper used by the report renderer to embed a QR link to the
+#' project repository.
+#'
+#' @param text Text or URL to encode into the QR code.
+#' @param size Pixel size of the QR code image (not critical).
+#'
+#' @return A Base64 string suitable for use inside an HTML
+#'   \code{<img src="data:image/png;base64,...">} tag.
+#' @keywords internal
+generate_qr_base64 <- function(text, size = 400) {
+  if (!requireNamespace("qrcode", quietly = TRUE)) {
+    stop("Package 'qrcode' is required. Install with install.packages('qrcode').")
+  }
+  if (!requireNamespace("png", quietly = TRUE)) {
+    stop("Package 'png' is required. Install with install.packages('png').")
+  }
+  
+  tmp_png <- tempfile(fileext = ".png")
+  
+  # qrcode::qr_code() returns a logical matrix
+  mat <- qrcode::qr_code(text)
+  img <- ifelse(mat, 0, 1)  # black = 0, white = 1
+  
+  png::writePNG(img, target = tmp_png)
+  
+  encode_png_base64(tmp_png)
+}
+
+#' Draw a dipole schematic to PNG for a loaded dipole design
+#'
+#' @param design The output list from \code{design_loaded_dipole_full()}.
+#' @param file Output PNG file path.
+#' @param width Width in inches.
+#' @param height Height in inches.
+#'
+#' @return Invisibly, the file path.
+#' @keywords internal
+draw_loaded_dipole_schematic <- function(
+    design,
+    file,
+    width  = 9,
+    height = 3
+) {
+  bt <- design$build_table
+  
+  get_num <- function(label) {
+    v <- bt$Value[bt$Item == label]
+    if (!length(v)) return(NA_real_)
+    as.numeric(gsub("[^0-9.-]", "", v))
+  }
+  
+  total_len  <- get_num("Total dipole length")
+  coil_pos   <- get_num("Optimal coil position")
+  inductance <- get_num("Required inductance (uH)")
+  freq_mhz   <- get_num("Operating frequency")
+  
+  half_len <- total_len / 2
+  units    <- if (isTRUE(design$metric)) "m" else "ft"
+  
+  grDevices::png(
+    filename = file,
+    width    = width,
+    height   = height,
+    units    = "in",
+    res      = 150
+  )
+  
+  par(mar = c(2, 2, 3, 2))
+  plot(
+    NA, NA,
+    xlim = c(-half_len - 5, half_len + 5),
+    ylim = c(-6, 7),
+    xlab = "", ylab = "",
+    axes = FALSE,
+    asp  = 1,
+    main = sprintf("Loaded Dipole Schematic (%.3f MHz)", freq_mhz)
+  )
+  
+  # Dipole wire
+  segments(-half_len, 0, half_len, 0, lwd = 8)
+  
+  # Feedpoint
+  points(0, 0, pch = 19, col = "blue", cex = 2)
+  text(0, 1.2, "Feedpoint", col = "blue", cex = 1.4)
+  
+  # Coils (symmetrical)
+  coil_x <- c(-coil_pos, coil_pos)
+  points(coil_x, c(0, 0), pch = 21, bg = "white", col = "red", cex = 1.8)
+  text(
+    coil_x,
+    rep(-2.0, 2),
+    sprintf("Coil @ %.1f %s", coil_pos, units),
+    col = "red",
+    cex = 1.3
+  )
+  
+  # Inductance label
+  text(
+    0, -5.0,
+    sprintf("Per-coil inductance: %.2f uH", inductance),
+    col  = "red",
+    cex  = 1.4,
+    font = 2
+  )
+  
+  # End labels
+  text(-half_len, 4.0, sprintf("End (%.1f %s)", -half_len, units), cex = 1.3)
+  text( half_len, 4.0, sprintf("End (%.1f %s)",  half_len, units), cex = 1.3)
+  
+  # Distance arrows
+  arrow_y <- 5.0
+  arrows(0, arrow_y, coil_pos,  arrow_y, length = 0.12, lwd = 2)
+  arrows(0, arrow_y, -coil_pos, arrow_y, length = 0.12, lwd = 2)
+  
+  text(
+    0, arrow_y + 1.0,
+    sprintf("Coils %.1f %s from center", coil_pos, units),
+    cex = 1.5
+  )
+  
+  grDevices::dev.off()
+  invisible(file)
+}
+
+#' Draw a dipole schematic and return a Base64 string
+#'
+#' @param design Design object from \code{design_loaded_dipole_full()}.
+#' @param width Width in inches.
+#' @param height Height in inches.
+#'
+#' @return Base64-encoded PNG suitable for HTML embedding.
+#' @keywords internal
+draw_loaded_dipole_schematic_base64 <- function(
+    design,
+    width  = 9,
+    height = 3
+) {
+  tmp_png <- tempfile(fileext = ".png")
+  draw_loaded_dipole_schematic(
+    design = design,
+    file   = tmp_png,
+    width  = width,
+    height = height
+  )
+  encode_png_base64(tmp_png)
+}
+
+#' Render a markdown build report for a loaded dipole design
+#'
+#' This function creates a self-contained Markdown report for a design created
+#' by \code{design_loaded_dipole_full()}. The report includes:
+#' \itemize{
+#'   \item A formatted build table
+#'   \item An embedded (Base64) schematic figure (optional)
+#'   \item An embedded (Base64) QR code linking to the package repository
+#'   \item A small embedded CSS block so the HTML produced via pandoc looks
+#'         reasonable without external files.
+#' }
+#'
+#' @param design Result from \code{design_loaded_dipole_full()}.
+#' @param file Output \code{.md} filename.
+#' @param include_plot Logical; if \code{TRUE}, include an embedded schematic.
+#'
+#' @return Invisibly returns the markdown file path.
+#' @export
+render_loaded_dipole_md <- function(
+    design,
+    file,
+    include_plot = TRUE
+) {
+  if (!requireNamespace("knitr", quietly = TRUE)) {
+    stop("The 'knitr' package is required. Install with install.packages('knitr').")
+  }
+  
+  # Basic embedded CSS so pandoc HTML looks nice without external files
+  style_block <- c(
+    "<!-- Embedded basic styles for loadedDipole report -->",
+    "<style>",
+    "
+body {
+  font-family: 'Helvetica', 'Arial', sans-serif;
+  margin: 35px;
+  line-height: 1.55;
+  color: #222;
+  background: white;
+}
+h1, h2, h3 {
+  color: #003366;
+  font-weight: 700;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 25px;
+}
+th {
+  background: #003366;
+  color: white;
+  padding: 8px;
+  border-bottom: 2px solid #002244;
+  text-align: left;
+}
+td {
+  padding: 8px;
+  border-bottom: 1px solid #ccc;
+}
+.footer {
+  margin-top: 40px;
+  font-size: 0.9em;
+  color: #555;
+  border-top: 1px solid #aaa;
+  padding-top: 10px;
+}",
+    "</style>",
+    ""
+  )
+  
+  
+  
+  schematic_b64 <- if (include_plot) {
+    draw_loaded_dipole_schematic_base64(design)
+  } else {
+    NULL
+  }
+  
+  qr_b64 <- generate_qr_base64("https://github.com/YoJimboDurant/loadedDipole")
+  
+  md <- c(
+    "# Loaded Dipole Design Report",
+    "",
+    "Generated by **loadedDipole** in R — KE4MKG (Jim Durant)",
+    "",
+    "## Design summary",
+    "",
+    knitr::kable(design$build_table, format = "markdown"),
+    "",
+    if (include_plot) {
+      c(
+        "## Antenna schematic",
+        "",
+        sprintf(
+          '<img src="data:image/png;base64,%s" ',
+          schematic_b64
+        ),
+        'style="max-width:100%; border:1px solid #888;">',
+        ""
+      )
+    } else character(0),
+    "## QR code (project link)",
+    "",
+    sprintf(
+      '<img src="data:image/png;base64,%s" width="200">',
+      qr_b64
+    ),
+    "")
+  
+  if (!is.null(design$coil$summary_table)) {
+    md <- c(
+      md,
+      "",
+      "### Coil Build Details",
+      "",
+      knitr::kable(design$coil$summary_table, format = "markdown"),
+      ""
+    )
+  }
+    
+    md <- c(md, 
+    
+    "## Notes",
+    "",
+    "This report summarises the electrical and mechanical design of a",
+    "shortened loaded HF dipole based on the Jerry Hall short-dipole model."
+  )
+  
+  # Prepend CSS so pandoc lifts it into the <head> section
+  md <- c(style_block, md)
+  
+  writeLines(md, con = file)
+  invisible(file)
+}
+
+#' Render a full HTML build report for a loaded dipole design
+#'
+#' This convenience wrapper calls \code{render_loaded_dipole_md()} to build a
+#' temporary Markdown file and then uses \code{rmarkdown::pandoc_convert()} to
+#' produce a standalone HTML document. All styling and images are embedded so
+#' the HTML file is fully portable.
+#'
+#' @param design Result from \code{design_loaded_dipole_full()}.
+#' @param file Output HTML file path. Relative paths are resolved against
+#'   \code{getwd()}.
+#' @param include_plot Logical; if \code{TRUE}, include the schematic figure.
+#'
+#' @return Invisibly returns the HTML file path.
+#' @export
+render_loaded_dipole_html <- function(
+    design,
+    file = "loaded_dipole_report.html",
+    include_plot = TRUE
+) {
+  if (!requireNamespace("rmarkdown", quietly = TRUE)) {
+    stop("The 'rmarkdown' package is required. Install with install.packages('rmarkdown').")
+  }
+  
+  # Expand relative paths to absolute paths (for predictable output location)
+  if (!grepl("^(/|[A-Za-z]:)", file)) {
+    file <- file.path(getwd(), file)
+  }
+  
+  md_file <- tempfile(fileext = ".md")
+  
+  render_loaded_dipole_md(
+    design       = design,
+    file         = md_file,
+    include_plot = include_plot
+  )
+  
+  rmarkdown::pandoc_convert(
+    md_file,
+    to      = "html",
+    output  = file,
+    options = "--standalone"
+  )
+  
+  message("HTML report written to: ", file)
+  invisible(file)
+}

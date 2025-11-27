@@ -10,8 +10,15 @@ Description: Computational tools for loading coil optimization and
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Imports: stats
-Suggests: ggplot2, knitr, rmarkdown
+Imports:
+    stats,
+    ggplot2
+Suggests:
+    qrcode,
+    png,
+    base64enc,
+    rmarkdown,
+    knitr
 Roxygen: list(markup = "roxygen", roclets = c("namespace", "rd"))
 VignetteBuilder: knitr
 RoxygenNote: 7.3.3
