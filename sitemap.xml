@@ -7,8 +7,14 @@
 <url><loc>https://yojimbodurant.github.io/loadedDipole/index.html</loc></url>
 <url><loc>https://yojimbodurant.github.io/loadedDipole/reference/coil_inductance_profile.html</loc></url>
 <url><loc>https://yojimbodurant.github.io/loadedDipole/reference/design_loaded_dipole.html</loc></url>
+<url><loc>https://yojimbodurant.github.io/loadedDipole/reference/design_loaded_dipole_full.html</loc></url>
+<url><loc>https://yojimbodurant.github.io/loadedDipole/reference/design_loaded_dipole_full_plot.html</loc></url>
 <url><loc>https://yojimbodurant.github.io/loadedDipole/reference/design_pvc_coil.html</loc></url>
+<url><loc>https://yojimbodurant.github.io/loadedDipole/reference/draw_loaded_dipole_schematic.html</loc></url>
+<url><loc>https://yojimbodurant.github.io/loadedDipole/reference/draw_loaded_dipole_schematic_base64.html</loc></url>
+<url><loc>https://yojimbodurant.github.io/loadedDipole/reference/encode_png_base64.html</loc></url>
 <url><loc>https://yojimbodurant.github.io/loadedDipole/reference/estimate_efficiency.html</loc></url>
+<url><loc>https://yojimbodurant.github.io/loadedDipole/reference/generate_qr_base64.html</loc></url>
 <url><loc>https://yojimbodurant.github.io/loadedDipole/reference/index.html</loc></url>
 <url><loc>https://yojimbodurant.github.io/loadedDipole/reference/loading_coil_inductance.html</loc></url>
 <url><loc>https://yojimbodurant.github.io/loadedDipole/reference/optimize_inductance_for_position.html</loc></url>
@@ -17,6 +23,8 @@
 <url><loc>https://yojimbodurant.github.io/loadedDipole/reference/print.loadedDipoleRecommendation.html</loc></url>
 <url><loc>https://yojimbodurant.github.io/loadedDipole/reference/print.loadedDipoleSolution.html</loc></url>
 <url><loc>https://yojimbodurant.github.io/loadedDipole/reference/recommend_coil_position.html</loc></url>
+<url><loc>https://yojimbodurant.github.io/loadedDipole/reference/render_loaded_dipole_html.html</loc></url>
+<url><loc>https://yojimbodurant.github.io/loadedDipole/reference/render_loaded_dipole_md.html</loc></url>
 <url><loc>https://yojimbodurant.github.io/loadedDipole/reference/solve_loaded_dipole.html</loc></url>
 </urlset>
 

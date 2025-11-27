@@ -6,6 +6,8 @@
   : Summarise coil inductance versus placement for design work
 - [`design_loaded_dipole()`](https://yojimbodurant.github.io/loadedDipole/reference/design_loaded_dipole.md)
   : High-level design function for a shortened loaded dipole
+- [`design_loaded_dipole_full()`](https://yojimbodurant.github.io/loadedDipole/reference/design_loaded_dipole_full.md)
+  : Full practical design workflow for an optimized loaded dipole
 - [`design_pvc_coil()`](https://yojimbodurant.github.io/loadedDipole/reference/design_pvc_coil.md)
   : Design a single-layer air-core solenoid coil on PVC
 - [`estimate_efficiency()`](https://yojimbodurant.github.io/loadedDipole/reference/estimate_efficiency.md)
@@ -25,5 +27,9 @@
   : Print method for loaded dipole solutions
 - [`recommend_coil_position()`](https://yojimbodurant.github.io/loadedDipole/reference/recommend_coil_position.md)
   : Recommend a loading-coil placement for a given dipole and inductance
+- [`render_loaded_dipole_html()`](https://yojimbodurant.github.io/loadedDipole/reference/render_loaded_dipole_html.md)
+  : Render a full HTML build report for a loaded dipole design
+- [`render_loaded_dipole_md()`](https://yojimbodurant.github.io/loadedDipole/reference/render_loaded_dipole_md.md)
+  : Render a markdown build report for a loaded dipole design
 - [`solve_loaded_dipole()`](https://yojimbodurant.github.io/loadedDipole/reference/solve_loaded_dipole.md)
   : Solve for an unknown loaded dipole parameter
