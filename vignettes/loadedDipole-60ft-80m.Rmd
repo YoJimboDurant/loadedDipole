@@ -2,7 +2,7 @@
 title: "Designing a 60 ft Loaded 80 m Dipole with loadedDipole"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{60 ft 80 m Loaded Dipole}
+  %\VignetteIndexEntry{Designing a 60 ft Loaded 80 m Dipole with loadedDipole}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -124,7 +124,7 @@ eff_list <- lapply(seq_along(coil_positions), function(i) {
     coil_position = B,
     fraction_of_half = fractions[i],
     inductance = L_req,
-    efficiency = -10 * log10(eff$efficiency)
+    efficiency_loss = -10 * log10(eff$efficiency)
 
   )
 })
@@ -132,7 +132,7 @@ eff_list <- lapply(seq_along(coil_positions), function(i) {
 eff_df <- do.call(rbind, eff_list)
 
 # plot the result
-ggplot(eff_df, aes(x = coil_position, y = efficiency)) +
+ggplot(eff_df, aes(x = coil_position, y = efficiency_loss)) +
   geom_line(size = 1.1) +
   geom_vline(
     xintercept = rec$coil_position,
@@ -149,7 +149,7 @@ ggplot(eff_df, aes(x = coil_position, y = efficiency)) +
   ) +
   labs(
     x = "Coil position from feedpoint (ft)",
-    y = "Efficiency",
+    y = "Efficiency Loss (db)",
     title = "Efficiency vs Coil Position (Required Inductance Computed per Position)",
     subtitle = "Dashed line shows recommended coil placement"
   ) +
@@ -320,3 +320,36 @@ plot_coil_turns(
 In practice, wind one or two turns extra, measure the inductance using an
 LCR meter or analyzer, and remove/spread turns until the value matches the
 design target.
+
+
+## Render a full HTML build report for a loaded dipole design
+
+You can get a full report that gives tables and a figure for construction.
+
+```{r full_report, eval = FALSE}
+des <- design_loaded_dipole_full(frequency = 3.574, total_length = 60, L_max = 66, 
+                                 pvc_size = "1-1/2", make_plot = FALSE 
+                                  )
+render_loaded_dipole_html(
+  design = des,
+  file = "loaded_dipole_report.html",
+  include_plot = FALSE
+)
+
+```
+Our output file will look like this:
+
+Just print, grab your PVC,wire, soldering iron and insulators and go!
+```{r full_reportx, echo = FALSE}
+des <- design_loaded_dipole_full(frequency = 3.574, total_length = 60, L_max = 66, 
+                                 pvc_size = "1-1/2", make_plot = FALSE
+                                  )
+htmltools::HTML(
+ render_loaded_dipole_html(
+  design = des,
+  file = NULL,
+  include_plot = TRUE
+  )
+)
+
+```

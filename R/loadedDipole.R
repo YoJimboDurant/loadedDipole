@@ -1,20 +1,20 @@
 #' Calculate loading coil inductance for a shortened dipole
 #'
 #' This function implements the Jerry Hall (QST Sep 1974) formula for the
-#' inductance of a loading coil used to shorten a half‑wave dipole antenna.
-#' It returns the inductance of each coil in micro‑henries given the operating
+#' inductance of a loading coil used to shorten a half-wave dipole antenna.
+#' It returns the inductance of each coil in micro-henries given the operating
 #' frequency, the total physical length of the dipole, the distance from the
 #' feedpoint to each coil, and the conductor diameter.  The formula relies on
 #' logarithmic terms and is defined for distances measured in imperial units
 #' (feet and inches).  When `metric = TRUE` the inputs are converted from
 #' metres (for lengths) and metres (for wire diameter) to feet and inches
 #' internally.  For further details on the equation and variable definitions
-#' see Hall's article and subsequent summaries【584486973026570†L36-L68】.
+#' see Hall's article and subsequent summaries.
 #'
 #' @param frequency Operating frequency in megahertz (MHz).
 #' @param total_length Total physical length of the dipole.  If `metric` is
 #'   `TRUE` this value is interpreted as metres; otherwise it is taken as
-#'   feet.  The length refers to the complete end‑to‑end length of the dipole.
+#'   feet.  The length refers to the complete end-to-end length of the dipole.
 #' @param coil_position Distance from the feedpoint to each loading coil.  If
 #'   `metric` is `TRUE` this is in metres; otherwise in feet.  Two coils are
 #'   assumed symmetrically placed on each side of the feedpoint.
@@ -93,8 +93,8 @@ loading_coil_inductance <- function(frequency, total_length, coil_position,
   }
   # Search B in a sensible range: from a small fraction of A to just below half the length
   # Constrain the search for B to a realistic region between 10 % and 45 %
-  # of the half‑length.  Coils placed extremely close to the feedpoint minimise
-  # inductance but are impractical【618999281254567†L38-L43】.
+  # of the half-length.  Coils placed extremely close to the feedpoint minimise
+  # inductance but are impractical.
   half_length <- A / 2
   lower <- half_length * 0.10
   upper <- half_length * 0.45
@@ -117,7 +117,7 @@ loading_coil_inductance <- function(frequency, total_length, coil_position,
 #' at the optimum coil position.  When `total_length` and `inductance` are
 #' supplied it searches for a frequency that satisfies the inductance at the
 #' optimum coil position.  All calculations use the Jerry Hall formula for the
-#' coil inductance【584486973026570†L36-L68】.
+#' coil inductance.
 #'
 #' @param frequency Operating frequency in megahertz (MHz).  Use `NA` for the
 #'   unknown parameter.
@@ -133,7 +133,7 @@ loading_coil_inductance <- function(frequency, total_length, coil_position,
 #' @param search_length_range Optional numeric vector of length two giving the
 #'   lower and upper limits for total length when searching for a solution.
 #'   When `NULL` and the total length is unknown, the function uses a range
-#'   between 0.2 × (full‑size dipole length) and the full‑size dipole length
+#'   between 0.2 X (full-size dipole length) and the full-size dipole length
 #'   (`468/frequency`).  The search is in the same units as `total_length`.
 #' @param search_frequency_range Optional numeric vector of length two giving the
 #'   lower and upper limits for frequency when searching for a solution (in MHz).
@@ -208,10 +208,10 @@ solve_loaded_dipole <- function(frequency = NA, inductance = NA, total_length = 
   }
   # Case 2: frequency and inductance provided -> solve total_length & coil position
   if (!is.na(f_in) && !is.na(L_in) && is.na(A_in)) {
-    # Determine full‑size length for search
+    # Determine full-size length for search
     full_size <- 468 / f_in
     if (is.null(search_length_range)) {
-      # search between 20% of full‑size and full‑size
+      # search between 20% of full-size and full-size
       lower <- 0.2 * full_size
       upper <- full_size
     } else {
@@ -403,7 +403,7 @@ plot_inductor_placement <- function(
 
     B0 <- to_imperial(rec$coil_position, TRUE)  # recommended position in ft
 
-    # expand ±25% of half-length around B0
+    # expand plus/minus 25% of half-length around B0
     B_min <- max(0.05 * half_len_imp, B0 - 0.25 * half_len_imp)
     B_max <- min(half_len_imp,         B0 + 0.25 * half_len_imp)
 
@@ -643,7 +643,7 @@ recommend_coil_position <- function(frequency, total_length, inductance,
     if (target_fraction <= 0 || target_fraction >= 1) {
       stop("target_fraction must lie between 0 and 1")
     }
-    # clamp a window of ±0.25 around the target fraction
+    # clamp a window of  plus/minus 0.25 around the target fraction
     frac_lower <- max(0.05, target_fraction - 0.25)
     frac_upper <- min(0.95, target_fraction + 0.25)
   }
@@ -1169,7 +1169,7 @@ design_loaded_dipole <- function(
 #'   \item{winding_length_in}{Total winding length in inches}
 #'   \item{diameter_in}{Coil diameter in inches}
 #'   \item{wire_length_ft}{Estimated wire length in feet}
-#'   \item{summary_table}{Data frame of N ± 2 turns with inductance values}
+#'   \item{summary_table}{Data frame of N plus/minus 2 turns with inductance values}
 #' @examples
 #' design_pvc_coil(
 #'   inductance = 33.5,
@@ -1294,7 +1294,7 @@ plot_coil_turns <- function(
 #' @param pvc_size PVC form (e.g., "1-1/2").
 #' @param wire_diameter Wire diameter (inches or m).
 #' @param turn_spacing Turn spacing in inches (NULL = tight winding).
-#' @param positions Coil positions to evaluate (default: 8–22 ft or metric-converted).
+#' @param positions Coil positions to evaluate (default: 8 to 22 ft or metric-converted).
 #' @param metric TRUE = metres, FALSE = feet.
 #' @param make_plot Draw schematic?
 #'
@@ -1493,7 +1493,7 @@ design_loaded_dipole_full_plot <- function(design) {
   # Move inductance DOWN
   text(
     0, -5.0,
-    sprintf("Per-coil inductance: %.2f µH", inductance),
+    sprintf("Per-coil inductance: %.2f microH", inductance),
     col = "red",
     cex = 2.3,
     font = 2
@@ -1803,7 +1803,7 @@ render_loaded_dipole_md <- function(
   md <- c(
     "# Loaded Dipole Design Report",
     "",
-    "Generated by **loadedDipole** — KE4MKG (Jim Durant)",
+    "Generated by **loadedDipole** by KE4MKG (Jim Durant)",
     "",
     "## Design Summary",
     "",
@@ -2203,8 +2203,12 @@ html <- c(html, "</body></html>")
 
 # ----------- Write output --------------------------------------------------
 
+if(!is.null(file)){
 file <- normalizePath(file, mustWork = FALSE)
 writeLines(html, file)
 message("HTML report written to: ", file)
 invisible(file)
+}else{
+  html
+  }
 }

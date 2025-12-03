@@ -67,7 +67,7 @@ eff_list <- lapply(seq_along(coil_positions), function(i) {
     coil_position = B,
     fraction_of_half = fractions[i],
     inductance = L_req,
-    efficiency = -10 * log10(eff$efficiency)
+    efficiency_loss = -10 * log10(eff$efficiency)
 
   )
 })
@@ -75,7 +75,7 @@ eff_list <- lapply(seq_along(coil_positions), function(i) {
 eff_df <- do.call(rbind, eff_list)
 
 # plot the result
-ggplot(eff_df, aes(x = coil_position, y = efficiency)) +
+ggplot(eff_df, aes(x = coil_position, y = efficiency_loss)) +
   geom_line(size = 1.1) +
   geom_vline(
     xintercept = rec$coil_position,
@@ -92,7 +92,7 @@ ggplot(eff_df, aes(x = coil_position, y = efficiency)) +
   ) +
   labs(
     x = "Coil position from feedpoint (ft)",
-    y = "Efficiency",
+    y = "Efficiency Loss (db)",
     title = "Efficiency vs Coil Position (Required Inductance Computed per Position)",
     subtitle = "Dashed line shows recommended coil placement"
   ) +
@@ -185,4 +185,28 @@ plot_coil_turns(
   turn_spacing   = 0.070,
   N_range        = 10:70
 )
+
+## ----full_report, eval = FALSE------------------------------------------------
+# des <- design_loaded_dipole_full(frequency = 3.574, total_length = 60, L_max = 66,
+#                                  pvc_size = "1-1/2", make_plot = FALSE
+#                                   )
+# render_loaded_dipole_html(
+#   design = des,
+#   file = "loaded_dipole_report.html",
+#   include_plot = FALSE
+# )
+# 
+
+## ----full_reportx, echo = FALSE-----------------------------------------------
+des <- design_loaded_dipole_full(frequency = 3.574, total_length = 60, L_max = 66, 
+                                 pvc_size = "1-1/2", make_plot = FALSE
+                                  )
+htmltools::HTML(
+ render_loaded_dipole_html(
+  design = des,
+  file = NULL,
+  include_plot = TRUE
+  )
+)
+
 

@@ -14,11 +14,12 @@ Imports:
     stats,
     ggplot2
 Suggests:
-    qrcode,
-    png,
     base64enc,
-    rmarkdown,
-    knitr
+    htmltools,
+    knitr,
+    png,
+    qrcode,
+    rmarkdown
 Roxygen: list(markup = "roxygen", roclets = c("namespace", "rd"))
 VignetteBuilder: knitr
 RoxygenNote: 7.3.3

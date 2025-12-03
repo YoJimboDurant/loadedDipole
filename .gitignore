@@ -13,3 +13,5 @@
 *.so
 *.dll
 docs
+/doc/
+/Meta/
