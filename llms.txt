@@ -5,7 +5,8 @@
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://yojimbodurant.github.io/loadedDipole/LICENSE)
 ![R-CMD-check](https://img.shields.io/badge/R--CMD--check-passing-brightgreen)![Status:
-Experimental](https://img.shields.io/badge/status-experimental-blue)
+Experimental](https://img.shields.io/badge/status-experimental-blue)[![pkgdown
+site](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://yojimbodurant.github.io/loadedDipole/)
 
 `loadedDipole` provides numerical tools for designing and analyzing
 **shortened HF dipoles**, including:
@@ -18,7 +19,7 @@ Experimental](https://img.shields.io/badge/status-experimental-blue)
   and **restricted-space** operations
 
 This package emerged from practical antenna design problems and includes
-computational methods developed with assistance from ChatGPT (“Mike”).
+computational methods developed with assistance from ChatGPT.
 
 ------------------------------------------------------------------------
 
